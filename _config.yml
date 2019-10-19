@@ -99,7 +99,7 @@ naver_site_verification  :
 
 # Analytics
 analytics:
-  provider               : google # false (default), "google", "google-universal", "custom"
+  provider               : "google" # false (default), "google", "google-universal", "custom"
   google:
     tracking_id          :
     anonymize_ip         : # true, false (default)
@@ -111,11 +111,11 @@ author:
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "1994.04.22"
   location         : "Seoul, Korea"
-  email            : ddu0422@naver.com
+  email            : "ddu0422@naver.com"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      url: ddu0422@naver.com
+      url: "ddu0422@naver.com"
     # - label: "Website"
     #   icon: "fas fa-fw fa-link"
     #   # url: "https://your-website.com"
@@ -143,7 +143,7 @@ author:
 #       # url:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
-      url: https://github.com/ddu0422
+      url: "https://github.com/ddu0422"
 #     - label: "GitLab"
 #       icon: "fab fa-fw fa-gitlab"
 #       # url:
