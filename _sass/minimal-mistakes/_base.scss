@@ -158,6 +158,10 @@ pre {
   overflow-x: auto; /* add scrollbars to wide code blocks*/
 }
 
+code {
+  line-height: 1.0 !important;
+}
+
 p > code,
 a > code,
 li > code,
