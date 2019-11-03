@@ -11,7 +11,7 @@ categories: [Jekyll]
 
 - 그 결과
 
-<img src="../assets/images/etc/code_highlight_bug.png" width="500px" height="150px" alt="code_highlight_bug" />
+<img src="/assets/images/etc/code_highlight_bug.png" width="500px" height="150px" alt="code_highlight_bug" />
 
 - 이처럼 Code Highlight가 적용되지 않았습니다.
 
@@ -22,7 +22,7 @@ categories: [Jekyll]
 
 - 결과는??
 
-<img src="../assets/images/etc/code_highlight_bug_fix.png" width="500px" height="150px" alt="code_highlight_bug_fix" />
+<img src="/assets/images/etc/code_highlight_bug_fix.png" width="500px" height="150px" alt="code_highlight_bug_fix" />
 
 ## 결론
 
