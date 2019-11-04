@@ -60,7 +60,7 @@ categories: [Spring]
 
         - MainController 생성 시점에 MainService가 생성되지 않아서 NPE가 발생하는 걸 볼 수 있습니다.
 
-4. 불변성을 보장한다.
+4. 불변성을 보장합니다.
     - Constructor Injection을 사용하면 field에 final을 붙일 수 있어 불변성이 보장됩니다.
 
     ```java
@@ -74,11 +74,11 @@ categories: [Spring]
     }
     ```
 
-5. 순환 참조를 알기 쉽다.
+5. 순환 참조를 알기 쉽습니다.
     - Constructor Injection은 실행 시점에 순환 참조를 알 수 있습니다.  
 
-        <img src="../assets/images/spring/constructor_injection_circle_reference.png" alt="생성자 주입 순환 참조 시" />
+        <img src="/assets/images/spring/constructor_injection_circle_reference.png" alt="생성자 주입 순환 참조 시" />
 
     - Field Injection은 사용 시점에 순환 참조를 알 수 있습니다. 이 경우에는 해당 메서드를 사용 시 순환 참조가 일어나면서 StackOverFlow 에러가 발생합니다.  
 
-        <img src="../assets/images/spring/field_injection_circle_reference.png" width="50%" alt="필드 주입 순환 참조 시" />
+        <img src="/assets/images/spring/field_injection_circle_reference.png" width="50%" alt="필드 주입 순환 참조 시" />
