@@ -77,8 +77,8 @@ categories: [Spring]
 5. 순환 참조를 알기 쉽습니다.
     - Constructor Injection은 실행 시점에 순환 참조를 알 수 있습니다.  
 
-        <img src="/assets/images/spring/constructor_injection_circle_reference.png" alt="생성자 주입 순환 참조 시" />
+<img src="/assets/images/spring/constructor_injection_circle_reference.png" alt="생성자 주입 순환 참조 시" />
 
     - Field Injection은 사용 시점에 순환 참조를 알 수 있습니다. 이 경우에는 해당 메서드를 사용 시 순환 참조가 일어나면서 StackOverFlow 에러가 발생합니다.  
 
-        <img src="/assets/images/spring/field_injection_circle_reference.png" width="100%" alt="필드 주입 순환 참조 시" />
+<img src="/assets/images/spring/field_injection_circle_reference.png" width="100%" alt="필드 주입 순환 참조 시" />
