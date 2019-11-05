@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: single
 title: Constructor Injectoin vs Field Injection
 tag: [Spring]
 categories: [Spring]
@@ -22,7 +22,7 @@ categories: [Spring]
     - Field Injectoin은 DI 컨테이너에 의존성을 가지게 되어 단위 테스트가 어렵습니다.
         - DI 컨테이너를 사용하지 않으면 단위 테스트 시 NPE(Null Point Exception)가 발생합니다.
 
-            ```java
+            ```Java
             public class MainController() {
                 
                 @Autowired
