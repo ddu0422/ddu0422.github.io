@@ -1,0 +1,39 @@
+---
+title: "기본 Data 초기화 (with. JPA)"
+description: "Spring Boot와 JPA를 사용할 때 H2 초기 데이터를 적용하기 위한 설정을 기록합니다."
+category: "백엔드"
+tags: ["Spring Boot","Spring","JPA","H2"]
+status: "Published"
+featured: false
+publishedAt: "2023-10-18T21:03:43+09:00"
+sourceUrl: "https://dhistory.tistory.com/229"
+sourceCategory: "Programming/Spring Boot"
+---
+
+## data.sql 파일 생성 및 데이터 입력
+
+```bash
+resources
+ㄴdata.sql # 파일 생성
+```
+
+```sql
+insert into climbing_park (name) values ('이름');
+```
+
+ 
+
+## application.yaml 설정 파일 변경
+
+```bash
+spring:
+  h2:
+    console:
+      enabled: true
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:local
+    username: svc_local
+  jpa:
+    defer-datasource-initialization: true # 추가
+```

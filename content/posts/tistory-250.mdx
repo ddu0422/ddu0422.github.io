@@ -1,0 +1,42 @@
+---
+title: "aws configure 등록 방법"
+description: "AWS CLI에 자격 증명·리전·출력 형식을 등록하고 설정된 값을 확인하는 절차를 기록합니다."
+category: "인프라"
+tags: ["AWS"]
+status: "Published"
+featured: false
+publishedAt: "2024-01-15T22:52:13+09:00"
+sourceUrl: "https://dhistory.tistory.com/250"
+sourceCategory: "Infrastructure/AWS"
+---
+
+> **이관 시 참고:** 이 글은 원문 게시 당시의 절차를 보존한 기록입니다. AWS는 루트 사용자의 액세스 키를 만들지 않고 임시 자격 증명을 사용하도록 권고합니다. [AWS 공식 보안 지침](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html#root-user-no-access-keys)을 먼저 확인하세요.
+
+## 전제
+
+1. [AWS CLI 설치](/posts/tistory-248/)
+
+2. [AWS Access Key / Secret Key 등록](/posts/tistory-249/)
+
+ 
+
+## 과정
+
+![원문 이미지 250](/images/tistory/250-1-897aaf8ce7cc.png)
+
+ 
+
+1. Access Key 입력
+
+2. Secret Key 입력
+
+3. 자신이 사용할 region 입력 (ap-northeast-2: 서울)
+
+4. aws cli 결과 기본 output format 설정
+
+ 
+
+```bash
+# 현재 등록된 정보 확인 및 변경
+aws configure list
+```

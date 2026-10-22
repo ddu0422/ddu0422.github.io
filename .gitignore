@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+dist/
+tmp/
+.env*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+*.pdf
+*.zip
+*.log

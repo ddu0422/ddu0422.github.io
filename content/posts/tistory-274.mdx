@@ -1,0 +1,165 @@
+---
+title: "Self-Invocation?"
+description: "같은 클래스 내부 호출에서 @Transactional이 적용되지 않는 이유와 외부 클래스 분리·AspectJ·이벤트 방식의 트레이드오프를 정리합니다."
+category: "백엔드"
+tags: ["Spring Boot","Spring"]
+status: "Published"
+featured: false
+publishedAt: "2026-06-01T07:49:34+09:00"
+sourceUrl: "https://dhistory.tistory.com/274"
+sourceCategory: "Programming/Spring Boot"
+---
+
+## Question
+
+Spring @Transactional이 같은 클래스 내 메서드 호출 시 트랜잭션이 적용되지 않는 이유는 무엇인가요?
+
+이를 해결하는 방법과 각 방법의 트레이드 오프는 무엇인가요?
+
+ 
+
+## Answer 1) @Transactional 동작 과정
+
+&gt; @Transactional은 Spring AOP 프록시 기반으로 동작
+
+&gt; @Transactional은 Proxy 객체 메서드 진입 시 시작
+
+&gt; 같은 클래스 내 this.method()는 Proxy 객체가 아닌 원본 객체를 직접 호출
+
+&gt; this.method() 에 선언된 @Transactional 동작 무시
+
+&gt; 코드 작성 의도와 런타임 시 코드 수행 동작 차이 발생
+
+![원문 이미지 274](/images/tistory/274-1-8aa45e507a0d.png)
+
+ 
+
+```kotlin
+class PaymentService {
+
+    @Transactional
+    public void processOrder() {
+        // 트랜잭션이 분리되지 않고 processOrder 트랜잭션과 함께 처리
+        this.pay()
+    }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void pay() { ... }
+}
+```
+
+ 
+
+## Answer 2) 외부 클래스로 분리
+
+&gt; 외부 클래스로 분리하여 Proxy 객체 호출
+
+&gt; SRP 원칙을 준수하고 명확하고 테스트 용이
+
+&gt; But. 클래스 증가
+
+![원문 이미지 274](/images/tistory/274-2-84f0275c9fc7.png)
+
+ 
+
+## Answer 3) AspectJ Weaving 으로 해결 가능 여부
+
+&gt; AspectJ 로 해결이 가능, Bytecode 조작으로 성능 향상 이점 (AOP 적용 시 Reflection, Interceptor Chain 사용)
+
+&gt; But. 빌드 복잡도, 디버깅, 오류 발견 시점 지연 (컴파일 -&gt; 런타임), 팀 러닝커브 증가 문제
+
+![원문 이미지 274](/images/tistory/274-3-557256c7a9df.png)
+
+ 
+
+## Answer 4) Event Publishing으로 Transaction 경계 분리
+
+&gt; DDD, Hexagonal Architecture에서 Application Service Layer 단위가 하나의 Transaction 단위가 되고 내부 도메인 서비스와 분리
+
+&gt; 레이어 경계를 따르면 자연스러운 분리
+
+&gt; But. 내부 이벤트 유실 가능성
+
+&gt; Transactional Outbox Pattern 도입으로 해결 가능
+
+ 
+
+|  | **@EventListener** | **@TransactionalEventListener** |
+| --- | --- | --- |
+| 시점 | 이벤트 발행 즉시 | 트랜잭션 커밋 후 |
+| 트랜잭션 관계 | 발행자 트랜잭션에 편승 | 독립적 |
+| 롤백 시 | 같이 롤백 | 실행 X |
+| 용도 | 같은 트랜잭션에 묶고 싶을 때 | 커밋 확정 후 후처리 |
+
+ 
+
+![원문 이미지 274](/images/tistory/274-4-f712d3a0d6e5.png)
+
+ 
+
+## ETC.
+
+### Self Injection @Lazy 기반
+
+&gt; 의도 불명확
+
+ 
+
+```kotlin
+class PaymentService(
+    @Lazy private val self: PaymentService
+) {
+
+    fun processOrder() {
+        self.pay()
+    }
+    
+    @Transactional
+    fun pay() { ... }
+}
+```
+
+ 
+
+### Application Context
+
+&gt; Spring 강결합, 테스트 복잡도 증가
+
+&gt; 의도 불명확, 가독성 저하
+
+```kotlin
+class PaymentSerivce(
+    private val applicationContext: ApplicationContext
+) {
+
+    fun processOrder() {
+         val self = applicationConext.getBean(PaymentService:class.java)
+         self.pay()
+    }
+    
+    @Transactional
+    fun pay() { ... }
+}
+```
+
+### 
+
+### AopProxy.currentProxy()
+
+&gt; AOP 프레임워크 강결합
+
+&gt; 의도 불명확, 가독성 저하
+
+ 
+
+```kotlin
+class PaymentService {
+
+    fun processOrder() {
+        (AopContext.currentProxy() as PaymentService).pay()
+    }
+    
+    @Transactional
+    fun pay() { ... }
+}
+```

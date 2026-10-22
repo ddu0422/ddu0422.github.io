@@ -1,0 +1,34 @@
+---
+title: "11-2 매뉴얼의 SQL 문법 표기를 읽는 방법"
+description: "MySQL 매뉴얼에서 사용하는 SQL 문법 표기의 기호와 읽는 방법을 정리합니다."
+category: "데이터베이스"
+tags: ["MySQL","Real MySQL 8.0"]
+status: "Published"
+featured: false
+publishedAt: "2023-06-18T23:26:38+09:00"
+sourceUrl: "https://dhistory.tistory.com/18"
+sourceCategory: "Infrastructure/MySQL"
+---
+
+MySQL 매뉴얼에 명시된 SQL 문법은 사용할 수 있는 모든 키워드나 기능을 하나의 문장에 다 표기해뒀기 때문에 한눈에 이해되지 않는다는 단점이 있습니다.
+
+하지만 해당 버전에 맞는 SQL 문법을 참조하기에는 매뉴얼만큼 정확한 자료가 없습니다.
+
+ 
+
+```sql
+INSERT [LOW_PRIORITY | DELAYED | HIGH_PRIORITY] [IGNORE]
+  [INTO] tabl_name
+  [PARTITION (partition_name [, partition_name] ...)]
+  [(col_name [, col_name] ...)]
+{VALUES | VALUE} (value_list) [, (value_list)] ...
+  [ON DUPLICATE KEY UPDATE assignment_list]
+```
+
+ 
+
+| 대괄호 \[\] | 선택 사항 | IGNORE |
+| --- | --- | --- |
+| 파이프 \| | 하나만 선택 가능 | LOW\_PRIORITY, DELAYED, HIGH\_PRIORITY |
+| 중괄호 &\#123;&\#125; | 반드시 하나 사용 | VALUES, VALUE |
+| 말줄임표 ... | 반복 사용 | partition\_name, value\_list |

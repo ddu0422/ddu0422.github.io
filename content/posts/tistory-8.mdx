@@ -1,0 +1,103 @@
+---
+title: "MySQL Container CSV 파일 넣기 - 활용"
+description: "MySQL 컨테이너에 CSV 데이터를 넣는 과정에서 만난 문제와 해결 과정을 정리합니다."
+category: "인프라"
+tags: ["MySQL","Docker"]
+status: "Published"
+featured: false
+publishedAt: "2023-06-01T11:20:57+09:00"
+sourceUrl: "https://dhistory.tistory.com/8"
+sourceCategory: "Programming/Docker"
+---
+
+## **MySQL Container 기본편**
+
+[\[Docker\] MySQL Container에 CSV 파일 넣기
+
+MySQL Container에 왜 CSV를 넣게 되었는가? datadog에 저장된 로그를 분석하는 작업을 진행하고 있었습니다. 로그를 group by하여 로그를 분석해야할 일이 생겼습니다. 처음에는 datadog에 내장되어 있는 gr
+
+dhistory.tistory.com](/posts/tistory-7/)
+
+ 
+
+## **배경**
+
+데이터 정합성을 맞추기 위해 **데이터 패턴을 확인하는 작업**이 필요했습니다.
+
+현재 AWS Aurora (MySQL 5.7)을 사용중이고, 5.7 버전에서는 regex를 이용하여 데이터를 변경하는 비용이 상당했습니다.
+
+이를 해결하고자 **MySQL 8.0에서 지원하는 regexp\_replace() 함수를 사용**하고자 합니다.
+
+MySQL 8.0을 새로 설치할 수 없는 환경이기 때문에 docker를 이용하여 MySQL 8.0을 설치하여 진행했습니다.
+
+ 
+
+## **진행방법**
+
+1. [MySQL Container 기본편](/posts/tistory-7/)을 활용하여 docker 설치 후 **csv 파일을 docker로 옮깁니다.**
+
+2. csv 파일 데이터를 담을 **Table을 생성**합니다.
+
+```sql
+# number이지만 문자열이 들어와있는 경우가 있음
+create table test(
+  id      bigint,
+  number  varchar(60)
+);
+
+create index idx_test_m1 on test(id);
+create index idx_test_m2 on test(number);
+```
+
+ 
+
+2. Table에 데이터 패턴을 분석할 **데이터를 입력**합니다.
+
+```sql
+LOAD DATA LOCAL
+INFILE test.csv
+INTO TABLE test
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n';
+```
+
+ 
+
+3. **regexp\_replace() 함수**와 **join update**를 이용하여 데이터를 변경합니다.
+
+```sql
+update test origin
+  join (select regexp_replace(number, '[0-9]', '#') number, id from test) as copy
+  on origin.id = copy.id
+set origin.number = copy.number
+;
+```
+
+ 
+
+4. 이후 group by와 count(\*)를 이용하여 현재 **데이터의 패턴을 추출**합니다.
+성능이 좋지 않은 쿼리이지만 local에서 돌리는 내용이기에 실 환경에 문제는 없습니다.
+
+```sql
+select number, count(*)
+from test
+group by number
+order by count(*) desc
+;
+```
+
+ 
+
+5. 추출한 데이터(임의값)를 분석합니다.
+
+```sql
++--------------------------------+----------+
+| number                         | count(*) |
++--------------------------------+----------+
+| +############                  |  1234567 |
+|                                |   123456 |
+| +############                  |    12345 |
+| ##########                     |    12345 |
+| ###########                    |     1234 |
++--------------------------------+----------+
+```

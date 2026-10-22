@@ -1,0 +1,58 @@
+---
+title: "실행 중인 Container 명령어 사용"
+description: "docker exec로 실행 중인 컨테이너에 명령을 전달하고, MySQL에 바로 접속하는 방법을 정리합니다."
+category: "인프라"
+tags: ["Docker"]
+status: "Published"
+featured: false
+publishedAt: "2023-08-23T23:09:31+09:00"
+sourceUrl: "https://dhistory.tistory.com/136"
+sourceCategory: "Programming/Docker"
+---
+
+## 명령어 전달을 해야하는 이유는 무엇인가?
+
+Local에 MySQL을 설치하지 않고 Docker Container를 이용하여 MySQL을 사용중이다.
+
+MySQL에 접속하기 위해 MySQL Container에 접속 후 mysql에 접속해야했다.
+
+이 작업은 반복되어 귀찮기 때문에 이를 개선하기 위해 명령어 전달을 하게 되었다.
+
+ 
+
+## 명령어를 어떻게 전달하는가?
+
+[docker exec
+
+ 
+
+docs.docker.com](https://docs.docker.com/engine/reference/commandline/exec/)
+
+```shell
+docker exec -it {container} {executable command}
+
+# 예시
+docker exec -it mysql echo hello docker
+```
+
+![원문 이미지 136](/images/tistory/136-1-a21d2aeb0de8.png)
+
+ 
+
+## 어떻게 mysql에 바로 접근할 것인가?
+
+```shell
+vim ~/.zshrc
+# 아래 내용 추가
+alias=mysql "docker exec -it mysql mysql -uroot -p"
+# 저장
+source ~/.zshrc
+```
+
+ 
+
+이후 mysql 명령어를 실행하면 Password를 입력할 수 있다.
+
+Password를 입력 후 mysql를 자유자재로 사용하자.
+
+![원문 이미지 136](/images/tistory/136-2-fca7770b7062.png)

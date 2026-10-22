@@ -1,0 +1,165 @@
+---
+title: "DGS 적용하여 GraphQL 사용하기"
+description: "Spring Boot에 DGS를 추가해 GraphQL 스키마와 데이터 조회 코드를 구성하고 요청을 확인하는 예제를 정리합니다."
+category: "백엔드"
+tags: ["Spring Boot","Spring","GraphQL","DGS"]
+status: "Published"
+featured: false
+publishedAt: "2023-07-05T21:28:05+09:00"
+sourceUrl: "https://dhistory.tistory.com/25"
+sourceCategory: "Programming/Spring Boot"
+---
+
+## Why GraphQL?
+
+GraphQL은 RestAPI와 달리 단일 EndPoint를 사용할 수 있습니다.
+
+GraphQL을 사용하면 Over-fetching과 Under-fetching에서 자유롭습니다.
+
+ 
+
+- Over-fetching: 불필요한 데이터까지 가져오는 것
+
+- Under-fetching: 필요한 데이터를 위해 여러번 요청하는 것
+
+ 
+
+GraphQL은 Schema First로 구현합니다.
+
+별도의 Class File을 만들지 않고 Client에서 필요한 Data를 Schema를 작성합니다.
+
+- Schema: GraphQL API를 호출할 때 Client에서 요청할 수 있는 Data 입니다. 
+
+  - Dto(Reqeust / Response)대신 사용합니다.
+
+ 
+
+## DGS 적용하기
+
+1. DGS Dependency 추가
+
+```java
+plugins {
+    // 23. 06. 24 기준
+    //https://github.com/Netflix/dgs-codegen/releases 참고
+    id "com.netflix.dgs.codegen" version "5.12.2"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // DGS
+    implementation(platform('com.netflix.graphql.dgs:graphql-dgs-platform-dependencies:6.0.1'))
+    implementation "com.netflix.graphql.dgs:graphql-dgs-spring-boot-starter"
+}
+```
+
+ 
+
+2. GraphQL Schema 파일 생성
+
+ 
+
+```bash
+# src/main/resources/schema/schema.graphqls
+
+# Client에서 요청할 Schema
+type Query {
+    climbingParks: [ClimbingPark]!
+}
+
+# Type 정의
+type ClimbingPark {
+    name: String!
+    iconUrl: String
+}
+```
+
+ 
+
+3. DataFetcher 작성
+
+```java
+@DgsComponent
+@RequiredArgsConstructor
+public class ClimbingParkDataFetcher {
+
+    @DgsQuery
+    public List<ClimbingPark> climbingParks() {
+        return Collections.emptyList();
+    }
+
+}
+```
+
+ 
+
+이해를 돕고자 Rest API로 변경한 내용입니다.
+
+```bash
+http://localhost:8080/graphiql
+```
+
+```java
+@RestController
+public class ClimbingParkApis {
+
+    @GetMapping("/climbing-parks")
+    public List<ClimbingParkResponse> findAllClimbingParks() {
+        return ...   
+    }
+}
+```
+
+ 
+
+아래 표를 참고하여 두 코드의 차이를 살펴봅니다.
+
+|  | GraphQL | RestAPI |
+| --- | --- | --- |
+| API | climbingParks | climbing-parks |
+| Request | X | X |
+| Response | ClimbingPark (type 정의) | ClimbingParkResponse |
+
+ 
+
+4. generateJava 추가
+
+```bash
+generateJava {
+	schemaPaths = ["${projectDir}/src/main/resources/schema"]
+	packageName = 'com.ocle.project'
+	generateClientv2 = true
+}
+```
+
+ 
+
+5. GraphQL 호출
+
+ 
+
+http://localhost:8080/graphiql 접속 후 아래 쿼리 실행
+
+```typescript
+query climbingParks {
+  climbingParks {
+    name
+    iconUrl
+  }
+}
+```
+
+ 
+
+![원문 이미지 25](/images/tistory/25-1-64c46966b19f.png)
+
+## 참조 문서
+
+[Home - DGS Framework
+
+How did this project begin? The DGS framework project started at Netflix in 2019 as internal teams began developing multiple GraphQL services. As 2020 wrapped up, Netflix decided to open source the framework and build a community around it. Is it productio
+
+netflix.github.io](https://netflix.github.io/dgs/)

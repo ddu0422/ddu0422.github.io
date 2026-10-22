@@ -1,0 +1,21 @@
+---
+title: "GitHub에 설정된 Default Branch 가져오기"
+description: "origin으로 연결된 Git 원격 저장소의 기본 브랜치 이름을 명령어로 확인하는 방법을 기록합니다."
+category: "백엔드"
+tags: ["Git"]
+status: "Published"
+featured: false
+publishedAt: "2023-06-08T11:28:31+09:00"
+sourceUrl: "https://dhistory.tistory.com/9"
+sourceCategory: "Programming/Git"
+---
+
+## 가정
+
+- git remote를 origin으로 설정
+
+```shell
+git remote show $(git remote get-url origin) | sed -n '/HEAD branch/s/.*: //p'
+```
+
+![원문 이미지 9](/images/tistory/9-1-bc6553424e54.png)

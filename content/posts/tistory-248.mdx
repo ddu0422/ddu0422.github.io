@@ -1,0 +1,39 @@
+---
+title: "AWS CLI 설치 방법 (Mac)"
+description: "macOS에서 AWS CLI를 설치하고 정상적으로 설치되었는지 확인하는 절차를 정리합니다."
+category: "인프라"
+tags: ["AWS"]
+status: "Published"
+featured: false
+publishedAt: "2024-01-15T22:27:51+09:00"
+sourceUrl: "https://dhistory.tistory.com/248"
+sourceCategory: "Infrastructure/AWS"
+---
+
+```bash
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+sudo installer -pkg AWSCLIV2.pkg -target /
+```
+
+![원문 이미지 248](/images/tistory/248-1-8cd13f488500.png)
+
+password는 본인의 Mac 비밀번호를 입력한다.
+
+ 
+
+```bash
+which aws
+aws --version
+```
+
+![원문 이미지 248](/images/tistory/248-2-249ba5d613f3.png)
+
+ 
+
+## 참고
+
+[최신 버전의 AWS CLI 설치 또는 업데이트 - AWS Command Line Interface
+
+이전 버전에서 업데이트하는 경우 unzip 명령을 실행하면 기존 파일을 덮어쓸지 묻는 메시지가 표시됩니다. 스크립트 자동화와 같은 경우에 이러한 프롬프트를 건너뛰려면 unzip에 대한 -u 업데이
+
+docs.aws.amazon.com](https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/getting-started-install.html)

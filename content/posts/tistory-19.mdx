@@ -1,0 +1,92 @@
+---
+title: "11-3 MySQL 연산자와 내장 함수 (1)"
+description: "MySQL에서 문자열·숫자·날짜·불리언 리터럴을 표기하는 방법과 타입 변환 시 주의할 점을 정리합니다."
+category: "데이터베이스"
+tags: ["MySQL","Real MySQL 8.0"]
+status: "Published"
+featured: false
+publishedAt: "2023-06-18T23:37:36+09:00"
+sourceUrl: "https://dhistory.tistory.com/19"
+sourceCategory: "Infrastructure/MySQL"
+---
+
+기본적인 연산자는 MySQL에서도 거의 비슷하게 사용하지만 MySQL만 사용하는 연산자나 표기법이 있습니다. ANSI 표준 형태가 아닌 연산자가 많이 있습니다. 가능하면 SQL의 가독성을 높이기 위해 ANSI 표준 형태의 연산자를 사용하길 권장합니다.
+
+ 
+
+## 11-3-1 리터펄 표기법 문자열
+
+### **문자열**
+
+| SQL | 홑따옴표 (') |
+| --- | --- |
+| MySQL | 홑따옴표 (') / 쌍따옴표 (") |
+
+```sql
+SELECT * FROM departments WHERE dept_no='d0001';
+SELECT * FROM departments WHERE dept_no="d0001";
+```
+
+ 
+
+SQL 표준에서는 문자열 값에 홑따옴표가 포함돼 있을 때 홑따옴표를 두 번 연속해서 입력하면 됩니다.
+
+MySQL에서는 쌍따옴표와 홑따옴표를 혼합해서 이런 문제를 피해 가기도 합니다. 마찬가지로 쌍따옴표를 가지고 있을 때는 쌍따옴표를 두 번 연속해서 사용할 수 있습니다.
+
+```sql
+# SQL 표준
+SELECT * FROM departments WHERE dept_no='d''001';
+SELECT * FROM departments WHERE dept_no='d"001';
+
+# MySQL 방언
+SELECT * FROM departments WHERE dept_no="d'001";
+SELECT * FROM departments WHERE dept_no="d""001";
+```
+
+ 
+
+숫자 값을 상수로 SQL에 사용할 때는 다른 DMBS와 마찬가지로 따옴표(’ or “)없이 숫자 값을 입력하면 된다. 문자열 형태로 따옴표를 사용하더라도 비교 대상이 숫자 값이거나 숫자 타입의 칼럼이면 MySQL 서버가 문자열 값을 숫자 값으로 자동 변환합니다.
+
+숫자 값과 문자열 값을 비교할 때는 한 가지 주의할 사항이 있습니다.
+
+```sql
+SELECT * FROM tab_test WHERE number_column='10001'; // 문자열 -> 숫자
+SELECT * FROM tab_test WHERE string_column=10001;   // 칼럼의 문자열을 숫자로 변환, index 이용 불가
+```
+
+두 비교 대상이 문자열과 숫자 타입으로 다를 때는 자동으로 타입의 변환이 발생합니다.
+
+MySQL은 숫자 타입과 문자열 타입 간의 비교에서 숫자 타입을 우선시하므로 문자열 값을 숫자 값으로 변환한 후 비교를 수행합니다.
+
+ 
+
+### 날짜
+
+다른 DBMS에서 날짜 타입을 비교하거나 INSERT 하려면 문자열을 DATE 타입으로 변환하는 코드가 필요합니다.
+
+MySQL에서는 정해진 형태의 날짜 포맷으로 표기하면 MySQL 서버가 자동으로 DATE나 DATETIME 값으로 변환하기 때문에 복잡하게 STR\_TO\_DATE() 등과 같은 함수를 사용하지 않아도 됩니다.
+
+```sql
+SELECT * FROM dept_emp WHERE from_date='2011-04-29'; // 문자열 -> DATE
+SELECT * FROM dept_emp WHERE from_date=STR_TO_DATE('2011-04-29', '%Y-%m-%d');
+```
+
+ 
+
+## 불리언
+
+MySQL에는 BOOL이나 BOOLEAN이라는 타입이 있지만 TINYINT 타입에 대한 동의어일 뿐입니다.
+
+MySQL에서는 TRUE 또는 FALSE 형태로 비교하거나 값을 저장할 수 있습니다. BOOL 타입뿐만 아니라 숫자 타입의 칼럼에도 모두 적용되는 비교 방법입니다.
+
+```sql
+CREATE TABLE tb_boolean (bool_value BOOLEAN);
+INSERT INTO tb_boolean VALUES (FALSE);
+
+SELECT * FROM tb_boolean WHERE bool_value=FALSE;
+SELECT * FROM tb_boolean WHERE bool_value=TRUE;
+```
+
+ 
+
+쿼리에서 TRUE나 FALSE로 비교했지만 실제로 값을 조회해 보면 0 또는 1 값이 조회됩니다.

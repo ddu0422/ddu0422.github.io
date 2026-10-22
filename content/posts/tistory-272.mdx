@@ -1,0 +1,153 @@
+---
+title: "JVM - Garbage Collector"
+description: "GC의 동작 과정과 Stop The World를 살펴보고, 주요 가비지 컬렉터의 특징을 정리합니다."
+category: "백엔드"
+tags: ["Java","JVM"]
+status: "Published"
+featured: false
+publishedAt: "2024-12-16T21:00:05+09:00"
+sourceUrl: "https://dhistory.tistory.com/272"
+sourceCategory: "Programming/Java"
+---
+
+## **Overview**
+
+Garbage Collector는 사용하지 않는 자원의 메모리를 해제하여 프로그램 메모리를 확보합니다.
+
+GC(Garbage Collection)를 하게 되면 GC 관련 Thread을 제외한 모든 Thread를 멈춥니다.
+
+이를 Stop The World(STW) 라고 합니다.
+
+ 
+
+## **GC의 동작 과정**
+
+Mark &amp; Sweep Algorithm을 사용하여 어느 곳에서도 참조하고 있지 않는 객체를 GC 대상으로 선정하여 제거합니다.
+
+Mark: Root Space(Stack, Method Aread, Native Method Stack)에서 참조하는 객체를 마킹합니다.
+
+Sweep: 마킹되지 않은 객체를 Heap에서 제거합니다.
+
+Compact: 분산된 객체를 Heap의 시작 주소로 모아 메모리가 할당된 부분과 할당되지 않은 부분으로 압축합니다
+
+![원문 이미지 272](/images/tistory/272-1-b0be653ab872.gif)
+
+ 
+
+### **Heap영역**
+
+**Young Generation**
+
+Eden: 객체 생성 시 처음 위치 하는 공간, GC 이후 살아남은 객체를 Survivor 영역으로 보냅니다.
+
+Survivor 0/Survivor 1: 최소 1번의 GC 이상 살아남은 객체가 존재하는 영역입니다. Survivor 0 혹은 Survivor 1 둘 중 하나의 영역은 비어있어야 합니다.
+
+⇒ Minor GC가 일어나며 Max Age가 될 때까지 반복합니다. (Eden → S0 → S1 → S0 → S1 …)
+
+ 
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        HotSpotDiagnosticMXBean bean = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
+        System.out.println("MaxTenuringThreshold(age): " + bean.getVMOption("MaxTenuringThreshold").getValue());
+    }
+}
+// MaxTenuringThreshold(age): 15
+```
+
+ 
+
+**Old Generation**
+
+Survivor 영역에서 살아남은 객체 중 Max Age를 넘은 경우 Old Generation으로 이동합니다.
+
+Old Generation이 가득 찬 경우 Major GC가 일어납니다.
+
+ 
+
+**Permanent**
+
+Java 7 버전까지는 Heap Area에 존재 / 8 버전부터 Native Method Stack에 편입했습니다.
+
+![원문 이미지 272](/images/tistory/272-2-e7b3e1b4cb64.png)
+
+ 
+
+ 
+
+## **GC Algorithm의 종류**
+
+### **Serial GC**
+
+- GC 쓰레드 1개
+
+- STW 가장 김
+
+### **Parallel GC**
+
+- Java 8의 기본 GC
+
+- CPU 개수 = GC 쓰레드 개수
+
+- Young 영역의 Minor GC를 멀티 쓰레드로 수행
+
+- Serial GC에 비해 STW 시간 감소
+
+![원문 이미지 272](/images/tistory/272-3-3d5cd8a6f496.png)
+
+ 
+
+### **Parallel Old GC**
+
+- CPU 개수 = GC 쓰레드 개수
+
+- Young + Old 영역 멀티 쓰레드로 수행
+
+- Mark-Summary-Compact 방식 이용
+
+| **특성** | **Mark Sweep Compact** | **Mark Summary Compact** |
+| --- | --- | --- |
+| **단계** | Mark, Sweep, Compact | Mark, Summary, Compact |
+| **단편화** | 높음 | 낮음 |
+| **정지 시간** | 상대적으로 김 | 상대적으로 짧음 |
+| **구현 복잡성** | 낮음 | 높음 |
+| **메모리 관리** | 전체 대상 수집 | 부분 대상 수집 및 요약 정보 활용 |
+
+ 
+
+### **G1 GC**
+
+- Java 9의 기본 GC
+
+- Region 개념을 도입
+
+- G1 GC 부터는 Eden → Survivor 0 → Survivor 1 → Old 로 순차 이동을 하지 않고 효율적인 위치로 객체 할당
+
+ 
+
+![원문 이미지 272](/images/tistory/272-4-f74b05ab558c.png)
+
+ 
+
+### **Shenandoah GC**
+
+- Java 12에 Release
+
+- G1이 가진 Pause 이슈 해결
+
+- Java Thread와 GC Thread 병렬적으로 실행
+
+- Init Marking → Concurrent Marking → Final Marking → Concurrent Compaction
+
+### **ZGC**
+
+- Java 15에 Release
+
+- ZPage 개념을 도입
+
+- G1의 Region 크기 고정이지만, ZPage는 2mb 배수로 동적 운영
+
+- STP 시간 10ms를 넘지 않음
+
+![원문 이미지 272](/images/tistory/272-5-5683676c416b.png)

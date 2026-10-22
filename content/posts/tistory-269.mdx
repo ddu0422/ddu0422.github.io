@@ -1,0 +1,52 @@
+---
+title: "JIT Compiler?"
+description: "JIT 컴파일러가 실행 시점에 코드를 기계어로 번역하는 방식과 인터프리터를 함께 사용하는 흐름을 정리합니다."
+category: "백엔드"
+tags: ["Java", "JIT"]
+status: "Published"
+featured: false
+publishedAt: "2024-09-22T23:17:32+09:00"
+sourceUrl: "https://dhistory.tistory.com/269"
+sourceCategory: "Programming/Java"
+---
+
+## **Overview**
+
+- JIT Compiler는 프로그램을 실제 실행하는 시점에 기계어로 번역하는 컴파일 기법입니다.
+  처음 실행 시 interpret를 하면서 자주 쓰이는 코드를 캐시에 담아두었다가 재사용합니다.
+
+- Runtime 시 적용되는 기술이며 interpret과 compile을 혼합하여 사용합니다.
+
+→ 처음 실행 시 interpret하면서 실행
+
+→ 다음 실행 시 캐싱된 기계어 파일을 읽음 (like compile)
+
+ 
+
+**Interpret vs Static Compile**
+
+Interpret: 실행 중인 프로그램 코드를 읽어가면서 기계어로 번역
+
+Static Compile: 실행하기 전에 프로그램 코드를 기계어로 번역
+
+ 
+
+## **Java에서는 어떻게 사용할까?**
+
+ 
+
+![원문 이미지 269](/images/tistory/269-1-1233b3fe06af.png)
+
+ 
+
+- Compiler는 .java 파일을 .class 파일(bytecode)로 변경합니다. (Compile)
+
+- JIT Compiler는 class 파일을 읽어 기계어로 번역 후 캐시에 저장합니다. (Interpret &amp; Compile) 
+
+  - Interpret: 프로그램 실행 시 기계어로 번역
+
+  - Compile: 번역한 기계어를 캐시에 저장 후 동일한 내용 실행 시 재사용
+
+JIT Compiler는 bytecode를 각 플랫폼(OS)이 읽을 수 있는 기계어 형식으로 번역합니다.
+
+→ WORA (Write Once Run Anywhere)

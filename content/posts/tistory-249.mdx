@@ -1,0 +1,45 @@
+---
+title: "Root 계정 Access Key / Secret Key 등록 방법"
+description: "AWS 루트 계정의 액세스 키 생성 과정에 관한 과거 기록입니다. 현재 권장 보안 방식은 본문의 공식 지침을 참고하세요."
+category: "인프라"
+tags: ["AWS"]
+status: "Published"
+featured: false
+publishedAt: "2024-01-15T22:42:50+09:00"
+sourceUrl: "https://dhistory.tistory.com/249"
+sourceCategory: "Infrastructure/AWS"
+---
+
+> **이관 시 참고:** 이 글은 원문 게시 당시의 절차를 보존한 기록입니다. AWS는 루트 사용자의 액세스 키를 만들지 않고 임시 자격 증명을 사용하도록 권고합니다. [AWS 공식 보안 지침](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html#root-user-no-access-keys)을 먼저 확인하세요.
+
+## Root 계정 접속
+
+1. 이름 클릭 -&gt; Security credentials 클릭
+
+![원문 이미지 249](/images/tistory/249-1-c70edafbb4e4.png)
+
+ 
+
+2. Access key -&gt; Create access key 클릭
+
+![원문 이미지 249](/images/tistory/249-2-c3785ef7ed43.png)
+
+ 
+
+3. understand ~ 체크 -&gt; Create access key 클릭
+
+![원문 이미지 249](/images/tistory/249-3-f104e4cc18eb.png)
+
+ 
+
+4. Download .csv file 클릭 -&gt; Done
+
+![원문 이미지 249](/images/tistory/249-4-85e3ce31a7fd.png)
+
+ 
+
+Secret 키는 현재 단계에서만 알 수 있으므로 csv file을 잃어버리지 않도록 저장한다.
+
+ 
+
+csv file을 저장하지 않고 Done을 누른 경우에는 생성된 Access Key를 삭제 후 1번 과정부터 다시 시작한다.
