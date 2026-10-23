@@ -1,5 +1,5 @@
 ---
-title: "시나브로 Phase 01 - 재고 동시성 제어 시도"
+title: "시나브로 Phase 01 - 재고 동시성 제어 시도 (1)"
 description: "한정 수량 판매에서 낙관적 락을 적용하고 충돌로 인한 구매 실패를 살펴봅니다."
 category: "시스템 설계"
 tags: ["Sinabro", "동시성", "JPA", "MySQL"]
@@ -46,8 +46,8 @@ publishedAt: "2026-10-23T16:54:23+09:00"
 
 ### 시도 사항
 
-#### Scenario 1: S-Lock
-JPA 를 사용하고 있기에 가장 간단한 S-Lock (@Version)을 사용해보자
+#### Scenario 1: X-Lock
+JPA 를 사용하고 있기에 가장 간단한 X-Lock (@Version)을 사용해보자
 
 ```kotlin
 @Entity
