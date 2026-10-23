@@ -1,0 +1,95 @@
+---
+title: "시나브로 Phase 01 — 재고 동시성 제어 시도"
+description: "한정 수량 판매에서 낙관적 락을 적용하고 충돌로 인한 구매 실패를 살펴봅니다."
+category: "시스템 설계"
+tags: ["Sinabro", "동시성", "JPA", "MySQL"]
+status: "Published"
+publishedAt: "2026-10-23T16:54:23+09:00"
+---
+
+## 시나리오
+
+[지난 1편 보기](/posts/sinabro-phase-01-no-explicit-lock/)
+
+치이카와 작가는 MD의 노력에 감명을 받아 지속적으로 판매를 진행하고 싶어한다. <br />
+판권은 해결된 상황이지만 아직 대량 물량 생산이 진행되지 않았다. <br />
+
+재고의 수량이 충분하지 못하기 때문에 이제는 정확하게 1,000개의 우산 피규어만 판매되어야 하는 상황이다. <br />
+개발팀에는 다시 오픈하기 전까지 2시간 가량의 시간이 남아있는 상황이다. 발에 불똥이 떨어졌다.
+
+## 시스템 상황
+
+1편과 동일하게 Single Application + Single DB로 되어있는 상황이다.
+
+![Single Application 시스템 아키텍처](/images/sinabro-wiki/phase01_single_application_architecture.png)
+
+과연 이 상황에서 개발자는 어떤 선택을 해야할까?
+
+### 판단 상황
+
+#### 현재 상황
+
+- DB는 현재 MySQL InnoDB 이므로 격리 수준이 REPEATABLE_READ 이다.
+- Thread Pool 은 별도 설정을 하지 않아 10이다. 
+- 1 Application 에서도 재고가 정확하지 않기 때문에 Scale Out을 할 수도 없다.
+
+결론) 느려도 정확한 재고만 차감이 되어야한다. <br />
+현재는 DB의 Lock을 고려할 수 밖에 없는 상황이다. <br />
+과연 3가지 대응 방안중에서 어떤 선택을 해야할까? <br />
+
+
+1. S-Lock
+2. X-Lock
+3. Conditional Atomic Update
+
+<br />
+
+### 시도 사항
+
+#### Scenario 1: S-Lock
+JPA 를 사용하고 있기에 가장 간단한 S-Lock (@Version)을 사용해보자
+
+```kotlin
+@Entity
+class Inventory {
+     
+    // ...
+
+    @Version
+    @Column(name = "version", nullable = false)
+    val version: Long = 0
+
+    // ...
+}
+```
+
+(부하 테스트를 진행하여 실제 상황과 동일하게 테스트를 진행해보자)
+
+- Spring Boot
+- MySQL
+- k6
+
+<br />
+
+![k6 부하테스트](/images/sinabro-wiki/phase01_optimisic_lock_performance_result.png)
+
+현재 1,000명이 구매 요청을 했지만 현재는 5명이 구매를 하지 못한 상황이다. <br />
+이후 늦게 결제를 시도한 구매자들이 나머지 5개를 구매해버렸다. <br />
+띵동~ 띵동~ CX의 메신저 톡이 울리기 시작했다. <br />
+
+> **Warning**
+> - ???: 옆에 있는 애가 나보다 늦게 눌렀는데 왜 나는 구매에 실패했어요?
+> - CX: 죄송합니다. 시스템 상 문제가 있었던 것 같습니다.
+>       향후 이 문제에 대해 개발팀에 이야기하여 보강하겠습니다.
+>       죄송한 마음을 담아 할일 쿠폰 3,000원 (최소 20,000원 구매 시) 제공해드리겠습니다.
+>       다시 한번 죄송합니다.
+
+
+개발팀은 머리가 새하얘졌다. <br />
+충돌로 실패하면 재구매를 시도하지 않을까라는 안일한 생각이 있었기 때문이다. <br />
+
+> **Note**
+> org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect): [per.sinabro. domain.inventory.Inventory#1] <br />
+> 낙관적 락은 충돌을 감지해서 실패시키기 때문에 위와 같은 에러가 발생했다.
+
+<br />

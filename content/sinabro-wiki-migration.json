@@ -1,0 +1,44 @@
+{
+  "source": "sinabro.wiki",
+  "posts": [
+    {
+      "source": "Books-그림과-실습으로-배우는-쿠버네티스-01.md",
+      "post": "content/posts/kubernetes-book-01-docker.mdx",
+      "category": "인프라",
+      "publishedAt": "2026-09-28T21:37:07+09:00"
+    },
+    {
+      "source": "Books-그림과-실습으로-배우는-쿠버네티스-02.md",
+      "post": "content/posts/kubernetes-book-02-architecture.mdx",
+      "category": "인프라",
+      "publishedAt": "2026-09-30T06:21:40+09:00"
+    },
+    {
+      "source": "Projects-Phase-01-Single-Application-No-Explicit-Lock.md",
+      "post": "content/posts/sinabro-phase-01-no-explicit-lock.mdx",
+      "category": "시스템 설계",
+      "publishedAt": "2026-10-20T16:58:19+09:00"
+    },
+    {
+      "source": "Projects-Phase-01-Atomic-Update.md",
+      "post": "content/posts/sinabro-phase-01-atomic-update.mdx",
+      "category": "시스템 설계",
+      "publishedAt": "2026-10-23T16:54:23+09:00"
+    },
+    {
+      "source": "Tech-DB-Exclusive-Lock-동시성-제어.md",
+      "post": "content/posts/database-exclusive-lock-concurrency.mdx",
+      "category": "데이터베이스",
+      "publishedAt": "2025-07-13T16:49:37+09:00"
+    }
+  ],
+  "excluded": [
+    "Home.md",
+    "_Sidebar.md",
+    "Books.md",
+    "Projects.md",
+    "Tech-Notes.md",
+    "Design-Architecture.md",
+    "Troubleshooting.md"
+  ]
+}

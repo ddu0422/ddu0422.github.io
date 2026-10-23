@@ -1,0 +1,103 @@
+---
+title: "그림과 실습으로 배우는 쿠버네티스 02 — 쿠버네티스 개요"
+description: "쿠버네티스의 선언형 관리와 조정 루프, 아키텍처를 정리합니다."
+category: "인프라"
+tags: ["Kubernetes", "Docker", "독서"]
+status: "Published"
+publishedAt: "2026-09-30T06:21:40+09:00"
+---
+
+## 쿠버네티스란?
+
+- 컨테이너화된 애플리케이션의 **배포, 확장, 관리**를 자동화하는 오픈 소스 시스템
+
+<br />
+
+### 쿠버네티스의 특징
+
+| 항목 | 설명 | 비고 |
+| --- | --- | --- |
+| 선언형 | 바람직한 상태 정의  | ex. NGINX 컨테이너 하나 |
+| 절차형 | 작업 순서 지시  | ex. NGINX 컨테이너 하나 만들어줘 |
+
+<br />
+
+
+#### Reconciliation Loop(조정 루프)에 의해 자동 복구 시도
+
+- Docker는 장애 발생 시, 각 컨테이너의 설정 및 복구가 어렵다
+
+이미지 첨부 
+
+<br />
+
+#### YAML 파일로 설정 관리 (IaC)
+
+- Docker는 컨테이너의 사양을 개별적으로 관리하기 어렵다
+
+<br />
+
+```yaml
+# Manifest (k8s에서 사용하는 YAML 파일) 예시
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.25.3
+    resources:
+      requests:
+        memory: 100Mi
+```
+
+<br />
+
+#### 쿠버네티스의 API로 인프라 레이어 추상화
+
+- Docker는 서버가 여러 대일 때 어떤 서버에서 컨테이너를 실행해야 할 지 결정하기 어렵다
+- 서버 공유의 설정을 알 필요 없음
+
+<br />
+
+```yaml
+# OS 종류 & 외부 공개 수단 없음
+apiVersion: v1
+kind: Serice
+metadata:
+  name: my-service
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: myapp
+  ports:
+   - port: 80
+     targetPort: 80
+     nodePort: 30007
+```
+
+<br />
+
+### 쿠버네티스 아키텍처 개요
+
+![쿠버네티스 아키텍처 개요](/images/sinabro-wiki/K8S-Architecture-Overview.png)
+
+- 사용자는 kube-apiserver에 접속하여 인프라 환경 구축 수행
+  - kubectl 도구를 활용하여 kube-apiserver에 접근
+
+<br />
+
+> **Important**
+> Control Plane이 Worker Node에 직접 지시하지 않음
+
+<br />
+
+### 다양한 쿠버네티스 클러스터 구축 방법
+
+- [minikube](https://minikube.sigs.k8s.io/docs/start)
+  - k8s 공식 튜토리얼 소개
+- [kind](https://kind.sigs.k8s.io)
+  - docker in docker 환경 / 멀티 노드 클러스터 구성 가능
+- [k3s](https://k3s.io)
+  - 경량 k8s 도구

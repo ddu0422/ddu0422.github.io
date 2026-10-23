@@ -1,0 +1,170 @@
+---
+title: "Exclusive Lock으로 동시성 제어"
+description: "티켓 예매 예제로 데이터베이스의 배타적 락과 JPA 비관적 락 사용을 정리합니다."
+category: "데이터베이스"
+tags: ["MySQL", "JPA", "동시성"]
+status: "Published"
+publishedAt: "2025-07-13T16:49:37+09:00"
+---
+
+## 🧐 Database Exclusive Lock 이란?
+
+- 하나의 트랜잭션이 자원에 락을 걸면 락이 해제되기 전까지 다른 트랜잭션은 해당 자원에 접근하거나 변경할 수 없다.
+<br /><br />
+
+### 💡 예시
+
+25년 7월 12일 OOO 콘서트 티켓이 오픈한다. <br />
+유명한 가수의 콘서트이므로 팬들이 동시에 티켓팅을 진행한다.
+
+<br />
+
+🔓 **락이 없는 경우**
+
+1. A 팬과 B 팬이 A17 번을 `동시에 티켓 예매를 진행`한다.
+2. A 팬의 요청으로 A17 좌석의 상태를 조회한다. (현재 상태: 예약 x)
+3. B 팬의 요청으로 A17 좌석의 상태를 조회한다. (현재 상태: A 팬의 요청이 끝나지 않았으므로 예약 x)
+4. A 팬의 요청이 완료되어 A17 좌석을 예약 처리한다. 
+5. B 팬의 요청이 완료되어 A17 좌석을 예약 처리한다.
+
+> 히스토리를 쌓는 구조라면 A 팬, B 팬이 동시에 좌석 예약 <br />
+마지막 요청 기준으로 업데이트를 한다면 B 팬이 예약 처리
+
+<br />
+
+🔐 **락이 있는 경우**
+
+1. A 팬과 B 팬이 A17 번을 `동시에 티켓 예매를 진행`한다.
+2. A 팬의 요청으로 A17 좌석의 상태를 조회한다.
+3. B 팬의 요청으로 A17 좌석의 상태를 조회를 대기한다.
+4. A 팬의 요청이 완료되어 A17 좌석을 예약 처리한다.
+5. B 팬이 A17 좌석의 상태를 조회한다.
+6. B 팬은 `이미 선택된 좌석`이라 예약에 실패한다.
+
+<br /><br />
+
+## 예제 코드
+
+```kotlin
+@Service
+class TicketService(
+    private val loadTicketReservation: LoadTicketReservation,
+    private val findTicket: FindTicket,
+    private val loadTicket: LoadTicket,
+    private val acquireLock: AcquireLock,
+    private val releaseLock: ReleaseLock
+) : ReserveTicket, CreateTicket {
+
+    // Default
+    @Transactional
+    override fun reserve(userId: Long, ticketId: Long): Long {
+        val ticket = findTicket.findByIdIsReserved(ticketId, false) ?: throw RuntimeException("Not found ticket.")
+
+        ticket.reserve()
+        loadTicketReservation.load(TicketReservation(userId, ticket))
+
+        return 0
+    }
+
+    // DB Exclusive Lock
+    @Transactional
+    override fun reservePriority(userId: Long, ticketId: Long): Long {
+        val ticket = findTicket.findByIdIsReservedForPriority(ticketId, false) ?: throw RuntimeException("Not found ticket.")
+
+        ticket.reserve()
+        loadTicketReservation.load(TicketReservation(userId, ticket))
+
+        return 0
+    }
+
+    @Transactional
+    override fun create(): Long {
+        return loadTicket.loadTicket(Ticket()).id ?: 0
+    }
+}
+```
+
+```kotlin
+interface TicketJpaRepository : JpaRepository<Ticket, Long> {
+    fun findByIdAndIsReserved(id: Long, isReserved: Boolean): Ticket?
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT ticket FROM Ticket ticket WHERE ticket.id = :id and isReserved = :isReserved")
+    fun findByIdAndIsReservedForUpdate(id: Long, isReserved: Boolean): Ticket?
+}
+```
+
+<br /><br />
+
+## 테스트 코드
+
+```kotlin
+@SpringBootTest
+class TicketServiceTest(
+    private val ticketService: TicketService
+) : FunSpec({
+
+    test("동시성 이슈") {
+        val theadCount = 10
+        val ticketId = ticketService.create()
+
+        val executorService = Executors.newFixedThreadPool(theadCount)
+        val tasks = List(theadCount * theadCount) {
+            Callable {
+                try {
+                    ticketService.reserve(1, ticketId)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+        }
+        val results = executorService.invokeAll(tasks).map { it.get() }
+
+        val successCount = results.count { it }
+        val failCount = results.count { !it }
+
+        successCount shouldBe theadCount
+        failCount shouldBe theadCount * theadCount - theadCount
+    }
+
+    test("DB Lock으로 동시성 이슈 해결") {
+        val theadCount = 10
+        val limitCount = 1
+        val ticketId = ticketService.create()
+
+        val executorService = Executors.newFixedThreadPool(theadCount)
+        val tasks = List(theadCount * theadCount) {
+            Callable {
+                try {
+                    ticketService.reservePriority(1, ticketId)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+        }
+        val results = executorService.invokeAll(tasks).map { it.get() }
+
+        val successCount = results.count { it }
+        val failCount = results.count { !it }
+
+        successCount shouldBe limitCount
+        failCount shouldBe theadCount * theadCount - limitCount
+    }
+})
+```
+
+### 장점
+
+| 내용 | 설명 |
+|:---:|:---:|
+| 데이터 정합성 보장 | 동시 수정 방지 -> Dirty Write, Lost Update 방지 |
+| 경쟁 조건 방지 | Race Condition 원천 차단 |
+| 단순한 구현 | FOR UPDATE 혹은 @Lock(LockModeType.PESSIMISTIC_WRITE) 으로 설정 |
+
+### 단점
+
+| 내용 | 설명 |
+|:---:|:---:|
+| 성능 저하 | Lock 대기 시간동안 트랜잭션 처리 지연 및 속도 저하 발생 |
