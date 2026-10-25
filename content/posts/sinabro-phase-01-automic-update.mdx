@@ -33,21 +33,23 @@ publishedAt: "2026-10-23T16:54:23+09:00"
 - Thread Pool 은 별도 설정을 하지 않아 10이다. 
 - 1 Application 에서도 재고가 정확하지 않기 때문에 Scale Out을 할 수도 없다.
 
-결론) 느려도 정확한 재고만 차감이 되어야한다. <br />
-현재는 DB의 Lock을 고려할 수 밖에 없는 상황이다. <br />
-과연 3가지 대응 방안중에서 어떤 선택을 해야할까? <br />
+<br />
+
+결론
+- 동시 요청으로 인해 동시성 제어가 필요한 상황이다. <br />
+- 느려도 정확한 재고만 차감이 되어야한다. <br />
 
 
-1. S-Lock
-2. X-Lock
+1. Optimistic Lock
+2. Pessimistic Lock
 3. Conditional Atomic Update
 
 <br />
 
 ### 시도 사항
 
-#### Scenario 1: X-Lock
-JPA 를 사용하고 있기에 가장 간단한 X-Lock (@Version)을 사용해보자
+#### Scenario 1: Optimistic Lock
+JPA 를 사용하고 있기에 가장 간단한 Optimistic Lock (@Version)을 사용해보자
 
 ```kotlin
 @Entity
@@ -90,6 +92,6 @@ class Inventory {
 
 > **Note**
 > org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect): [per.sinabro. domain.inventory.Inventory#1] <br />
-> 낙관적 락은 충돌을 감지해서 실패시키기 때문에 위와 같은 에러가 발생했다.
+> Optimistic Lock은 충돌을 감지해서 실패시키기 때문에 위와 같은 에러가 발생했다.
 
 <br />
