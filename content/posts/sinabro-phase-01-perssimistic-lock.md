@@ -1,0 +1,77 @@
+---
+title: "시나브로 Phase 01 - 재고 동시성 제어 시도 (2)"
+description: "한정 수량 판매에서 비관적 락을 적용합니다."
+category: "시스템 설계"
+tags: ["Sinabro", "동시성", "JPA", "MySQL"]
+status: "Published"
+publishedAt: "2026-10-25T09:15:00+09:00"
+---
+
+## 시나리오
+
+[지난 2편 보기](/posts/sinabro-phase-01-optimistic-lock/)
+
+개발팀은 실패 시 대처방안에 대한 내용을 깊이있게 고려하지 않아 이번에는 CX 팀이 고생했다. <br />
+다시 멘탈을 부여잡고 이번에는 사용자의 불편을 해결하기 위해 같이 고민을 해보기로 하였다. <br />
+
+하지만 사용자의 불편에 대한 고려를 해본 적이 없기에 기존 CS 사항에서만 처리해보기로 결정했다. <br />
+재시도 없이 우선 구매를 할 수 있는 상황을 만들어보자. <br />
+
+개발팀은 반복된 실수로 인해 신뢰를 얻지 못하였고 추가 비용없이 구현을 해야하는 상황이다.
+
+## 시스템 상황
+
+2편과 동일하게 Single Application + Single DB로 되어있는 상황이다.
+
+![Single Application 시스템 아키텍처](/images/sinabro-wiki/phase01_single_application_architecture.png)
+
+과연 이 상황에서 개발자는 어떤 선택을 해야할까?
+
+### 판단 상황
+
+#### 현재 상황
+
+- DB는 현재 MySQL InnoDB 이므로 격리 수준이 REPEATABLE_READ 이다.
+- Thread Pool 은 별도 설정을 하지 않아 10이다. 
+- 1 Application 에서도 재고가 정확하지 않기 때문에 Scale Out을 할 수도 없다.
+
+<br />
+
+결론
+- 동시 요청으로 인해 동시성 제어가 필요한 상황이다. <br />
+- 느려도 정확한 재고만 차감이 되어야한다. <br />
+- (필수) 선착순은 아니더라도 시간 차를 적게하여 구매할 수 있게 해야한다.
+
+1. (불가) ~~Optimistic Lock~~
+2. Pessimistic Lock
+3. Conditional Atomic Update
+
+<br />
+
+### 시도 사항
+
+#### Scenario 2: Pessimistic Lock
+개발팀은 이 로직에 모든 걸 걸었다. <br />
+충돌이 일어남에도 반드시 성공을 해야한다. <br />
+
+```kotlin
+interface InventoryJpaRepository : JpaRepository<Inventory, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findByProductId(productId: Long): Inventory?
+}
+```
+
+(부하 테스트를 진행하여 실제 상황과 동일하게 테스트를 진행해보자)
+
+- Spring Boot
+- MySQL
+- k6
+
+<br />
+
+![k6 부하테스트](/images/sinabro-wiki/phase01_perssimistic_lock_performance_result.png)
+![DB 결과](/images/sinbro-wiki/phase01_perssimistic_lock_db_result.png)
+
+
+<br />
