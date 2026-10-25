@@ -73,14 +73,15 @@ class Inventory {
 
 <br />
 
-![k6 부하테스트](/images/sinabro-wiki/phase01_optimisic_lock_performance_result.png)
+![k6 부하테스트](/images/sinabro-wiki/phase01_optimisic_lock_performance_result.png) <br />
+![DB 결과](/images/sinbro-wiki/phase01_optimistic_lock_db_result.png)
 
 현재 1,000명이 구매 요청을 했지만 현재는 5명이 구매를 하지 못한 상황이다. <br />
 이후 늦게 결제를 시도한 구매자들이 나머지 5개를 구매해버렸다. <br />
 띵동~ 띵동~ CX의 메신저 톡이 울리기 시작했다. <br />
 
 > **Warning**
-> - ???: 옆에 있는 애가 나보다 늦게 눌렀는데 왜 나는 구매에 실패했어요?
+> - ???: 옆에 있는 애가 나보다 1분이나 늦게 눌렀는데 구매되고 왜 나는 구매에 실패했어요?
 > - CX: 죄송합니다. 시스템 상 문제가 있었던 것 같습니다.
 >       향후 이 문제에 대해 개발팀에 이야기하여 보강하겠습니다.
 >       죄송한 마음을 담아 할일 쿠폰 3,000원 (최소 20,000원 구매 시) 제공해드리겠습니다.
@@ -95,3 +96,5 @@ class Inventory {
 > Optimistic Lock은 충돌을 감지해서 실패시키기 때문에 위와 같은 에러가 발생했다.
 
 <br />
+
+[다음 3편 보기](/posts/sinabro-phase-01-exclusitc-lock/)
