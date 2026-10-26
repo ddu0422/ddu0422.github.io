@@ -7,7 +7,7 @@ import {postSchema} from '../src/lib/content/schema';
 import {loadPosts,sortPosts} from '../src/lib/content/loader';
 const base={title:'Title',description:'Description',category:'백엔드',tags:['JPA'],status:'Published',publishedAt:'2026-10-20'};
 test('Post frontmatter accepts technical fields and rejects career metadata',()=>{assert.equal(postSchema.parse(base).title,'Title');for(const field of ['company','organization','role','period','sourcePage','story'])assert.throws(()=>postSchema.parse({...base,[field]:'example'}));assert.throws(()=>postSchema.parse({...base,topic:'missing'}))});
-test('Published posts have dates and local routes without manual order',()=>{const posts=loadPosts();assert.ok(posts.length>0);for(const p of posts){assert.match(p.href,/^\/posts\/[a-z0-9-]+\/$/);assert.equal('order' in p,false);assert.ok(p.publishedAt);assert.equal(p.status,'Published');assert.ok(p.body.trim());if(p.sourceUrl){assert.match(p.sourceUrl,/^https:\/\/dhistory\.tistory\.com\/\d+$/);assert.ok(p.publishedAt);assert.ok(p.sourceCategory)}}});
+test('Posts have local routes without manual order; only published posts require dates',()=>{const posts=loadPosts();assert.ok(posts.length>0);for(const p of posts){assert.match(p.href,/^\/posts\/[a-z0-9-]+\/$/);assert.equal('order' in p,false);if(p.status==='Published')assert.ok(p.publishedAt);assert.ok(p.body.trim());if(p.sourceUrl){assert.match(p.sourceUrl,/^https:\/\/dhistory\.tistory\.com\/\d+$/);assert.ok(p.publishedAt);assert.ok(p.sourceCategory)}}});
 test('Executable MDX and symlink posts are rejected',()=>{const root=fs.mkdtempSync(path.join(os.tmpdir(),'blog-content-'));const folder=path.join(root,'content/posts');fs.mkdirSync(folder,{recursive:true});const target=path.join(folder,'example.mdx');try{fs.writeFileSync(target,'---\ntitle: Test\ndescription: Test\ncategory: 백엔드\ntags: [JPA]\nstatus: Published\npublishedAt: "2026-10-20"\n---\nimport x from "x"');assert.throws(()=>loadPosts(root),/Unsafe MDX/);fs.unlinkSync(target);fs.symlinkSync('/tmp/missing-blog-example',target);assert.throws(()=>loadPosts(root),/Symlink/)}finally{fs.rmSync(root,{recursive:true,force:true})}});
 
 test('Publication dates sort newest first with deterministic ties and undated drafts last',()=>{
@@ -15,8 +15,8 @@ test('Publication dates sort newest first with deterministic ties and undated dr
  assert.deepEqual(sortPosts([...posts]).map(p=>p.slug),['latest','a','b','old','draft']);
  assert.deepEqual(sortPosts([...posts].reverse()).map(p=>p.slug),['latest','a','b','old','draft']);
 });
-test('Published dates are required; drafts can omit them and manual order is rejected',()=>{
- const {publishedAt,...undated}=base;assert.throws(()=>postSchema.parse(undated));assert.doesNotThrow(()=>postSchema.parse({...undated,status:'Draft'}));assert.throws(()=>postSchema.parse({...base,order:1}));assert.throws(()=>postSchema.parse({...base,publishedAt:'2026-02-30'}));
+test('Published dates are required; drafts accept dates or omit them and manual order is rejected',()=>{
+ const {publishedAt,...undated}=base;assert.throws(()=>postSchema.parse(undated));assert.doesNotThrow(()=>postSchema.parse({...base,status:'Draft'}));assert.doesNotThrow(()=>postSchema.parse({...undated,status:'Draft'}));assert.throws(()=>postSchema.parse({...base,order:1}));assert.throws(()=>postSchema.parse({...base,publishedAt:'2026-02-30'}));
 });
 test('Code examples may contain import statements without enabling MDX imports',()=>{
  const posts=loadPosts();const kotlin=posts.find(p=>p.slug==='tistory-3');assert.ok(kotlin);assert.match(kotlin.body,/```/);assert.ok(posts.some(p=>p.body.includes('import ')));
