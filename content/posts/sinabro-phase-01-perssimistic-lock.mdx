@@ -70,8 +70,42 @@ interface InventoryJpaRepository : JpaRepository<Inventory, Long> {
 
 <br />
 
-![k6 부하테스트](/images/sinabro-wiki/phase01_perssimistic_lock_performance_result.png)
+![k6 부하테스트](/images/sinabro-wiki/phase01_perssimistic_lock_performance_result.png) <br />
 ![DB 결과](/images/sinbro-wiki/phase01_perssimistic_lock_db_result.png)
 
+개발팀은 테스트 결과를 보고 환호했다!! <br />
+모든 부하 요청을 견뎠으며 1,000건을 빠짐없이 구매에 성공했기 때문이다. <br />
+
+이제 배포 후 판매 대기만 기다리면 되는 상황이다. <br />
+
+개발팀: 배포 완료되었습니다!! 이제 딱 맞게 판매됩니다!! <br />
+마케팅팀: 저희 이번에 예상 유입이 10,000명입니다! 오픈 30초 전!
+
+> **Info**
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 이xx) <br />
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 오xx) <br />
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 박xx) <br />
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 양xx) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
+> 띠링~ (Timeout...) <br />
 
 <br />
+
+![k6 부하테스트](/images/sinabro-wiki/phase01_perssimistic_lock_performance_result.png) <br />
+![DB 결과](/images/sinbro-wiki/phase01_perssimistic_lock_db_result.png)
+
+<br />
+
+> **Warning**
+> - ???: 뭐야 왜 안들어가져!!
+> - ???: 아~ 서버 터졌네 눌렀는데 빙글빙글 돌기만 한다
+> - ???: 개발자 일 똑바로 안하냐 이 회사는 항상 이러네 ㅡㅡ
+
+개발팀은 다시 머리가 새하얘졌다. <br />
+유입 인원을 정확히 예측할 수 없어 테스트를 할 수 없었기 때문이다. <br />

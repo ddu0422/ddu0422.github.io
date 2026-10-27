@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import {verifyBlogNavigation} from './verify-navigation';
 import {chromium} from 'playwright';
 import {serveExport} from './static-server';
-import {published} from '../src/lib/content/loader';
+import {loadPosts,published} from '../src/lib/content/loader';
 import {PAGE_SIZE} from '../src/lib/pagination';
 import {formatPostTitle} from '../src/lib/post-title';
 const posts=published();const firstPageCount=Math.min(PAGE_SIZE,posts.length);
@@ -73,6 +73,17 @@ try{
  await page.goto(server.url+posts[0].href);await page.getByRole('navigation',{name:'주 메뉴'}).getByRole('link',{name:'글',exact:true}).click();await page.waitForURL(server.url+'/');
  for(const route of ['/about/','/experience/','/projects/','/activities/','/skills/','/portfolio/print/','/topics/','/topics/jpa/','/topics/architecture/','/topics/database/']){const r=await page.request.get(server.url+route);if(r.status()!==404)failures.push(`Legacy route still served ${route}`)}
  for(const route of ['/robots.txt','/sitemap.xml']){const r=await page.request.get(server.url+route);if(r.status()!==200)failures.push(`Missing ${route}`)}
+ const sitemap=await (await page.request.get(server.url+'/sitemap.xml')).text();
+ const homeHtml=await (await page.request.get(server.url+'/')).text();
+ for(const draft of loadPosts().filter(p=>p.status==='Draft')){
+  const response=await page.goto(server.url+draft.href,{waitUntil:'networkidle'});
+  if(response?.status()!==200)failures.push(`${draft.href}: draft unavailable`);
+  if(await page.locator('main h1').textContent()!==formatPostTitle(draft))failures.push(`${draft.href}: draft title`);
+  const robots=await page.locator('meta[name="robots"]').getAttribute('content');
+  if(!robots?.includes('noindex')||!robots.includes('nofollow'))failures.push(`${draft.href}: draft robots`);
+  if(await page.locator('.prev-next').count())failures.push(`${draft.href}: draft navigation`);
+  if(sitemap.includes(draft.href)||homeHtml.includes(draft.href))failures.push(`${draft.href}: draft listed`);
+ }
  await verifyBlogNavigation(page,server.url);
  if(failures.length)throw Error(failures.join('\n'));
  console.log(`Technical blog QA passed: ${routes.length} routes, mobile/desktop, category selection, navigation without topic pages, search/reset, pagination bounds, matching containers and heading rhythm, Korean labels, removed footer, light theme and removed career routes.`);
