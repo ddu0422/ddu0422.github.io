@@ -17,3 +17,9 @@ test('Legacy inline Note retains exception details and line breaks',async()=>{
 test('Ordinary quotes and alert-looking code remain unchanged',async()=>{
  const html=await render('> **Note about locks**\n> Ordinary quote.\n\n```text\n> [!WARNING]\n```');assert.ok(!html.includes('class="markdown-alert'));assert.match(html,/Note about locks/);assert.match(html,/\[!WARNING\]/);
 });
+
+for(const marker of ['**Info**','**INFO**','[!INFO]'])test(`${marker} uses the blue GitHub Note alert`,async()=>{
+ const html=await render(`> ${marker}\n> 띠링~<br />\n> 주문 완료`);
+ assert.match(html,/markdown-alert-note/);assert.match(html,/data-alert="note"/);assert.match(html,/markdown-alert-title">Note<\/p>/);
+ assert.match(html,/띠링~/);assert.match(html,/<br\/>/);assert.match(html,/주문 완료/);assert.ok(!html.includes('Info'));
+});

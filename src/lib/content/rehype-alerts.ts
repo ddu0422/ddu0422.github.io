@@ -1,10 +1,11 @@
 type HtmlNode={type:string;tagName?:string;value?:string;properties?:Record<string,unknown>;children?:HtmlNode[]};
 const labels={note:'Note',tip:'Tip',important:'Important',warning:'Warning',caution:'Caution'} as const;
 type AlertKind=keyof typeof labels;
+const alertKind=(label:string):AlertKind|undefined=>label==='info'?'note':Object.hasOwn(labels,label)?label as AlertKind:undefined;
 const textOf=(node:HtmlNode):string=>node.value||(node.children||[]).map(textOf).join('');
 const isBlank=(node:HtmlNode)=>node.type==='text'&&!node.value?.trim();
 
-/** Support GitHub alert markers and the existing > **Note** / > **Warning** format. */
+/** Support GitHub alert markers and the existing bold labels, including Info as an alias for Note. */
 export default function rehypeAlerts(){
  return (tree:HtmlNode)=>{
   function visit(node:HtmlNode){
@@ -14,11 +15,12 @@ export default function rehypeAlerts(){
     let kind:AlertKind|undefined;
     if(paragraph?.tagName==='p'&&first){
      if(first.type==='text'){
-      const marker=first.value?.match(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*(?:\r?\n|$)/i);
-      if(marker){kind=marker[1].toLowerCase() as AlertKind;first.value=first.value!.slice(marker[0].length)}
+      const marker=first.value?.match(/^\s*\[!(NOTE|INFO|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*(?:\r?\n|$)/i);
+      if(marker){kind=alertKind(marker[1].toLowerCase());first.value=first.value!.slice(marker[0].length)}
      }else if(first.tagName==='strong'){
       const label=textOf(first).trim().toLowerCase();
-      if(Object.hasOwn(labels,label)){kind=label as AlertKind;paragraph.children=paragraph.children!.filter(child=>child!==first)}
+      kind=alertKind(label);
+      if(kind)paragraph.children=paragraph.children!.filter(child=>child!==first);
      }
      if(kind){
       const leading=paragraph.children?.find(child=>!isBlank(child));
