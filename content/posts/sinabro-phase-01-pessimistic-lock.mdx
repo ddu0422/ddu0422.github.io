@@ -1,4 +1,4 @@
----
+le---
 title: "시나브로 Phase 01 - 재고 동시성 제어 시도 (2)"
 description: "한정 수량 판매에서 비관적 락을 적용합니다."
 category: "시스템 설계"
@@ -70,8 +70,8 @@ interface InventoryJpaRepository : JpaRepository<Inventory, Long> {
 
 <br />
 
-![k6 부하테스트](/images/sinabro-wiki/phase01_perssimistic_lock_performance_result.png) <br />
-![DB 결과](/images/sinbro-wiki/phase01_perssimistic_lock_db_result.png)
+![k6 부하테스트](/images/sinabro-wiki/phase01_pessimistic_lock_performance_result.png) <br />
+![DB 결과](/images/sinabro-wiki/phase01_pessimistic_lock_db_result.png)
 
 개발팀은 테스트 결과를 보고 환호했다!! <br />
 모든 부하 요청을 견뎠으며 1,000건을 빠짐없이 구매에 성공했기 때문이다. <br />
@@ -86,26 +86,16 @@ interface InventoryJpaRepository : JpaRepository<Inventory, Long> {
 > 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 오xx) <br />
 > 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 박xx) <br />
 > 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 양xx) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
-> 띠링~ (Timeout...) <br />
 
 <br />
 
-![k6 부하테스트](/images/sinabro-wiki/phase01_perssimistic_lock_performance_result.png) <br />
-![DB 결과](/images/sinbro-wiki/phase01_perssimistic_lock_db_result.png)
+![k6 부하테스트](/images/sinabro-wiki/phase01_pessimistic_lock_performance_result.png) <br />
+![DB 결과](/images/sinabro-wiki/phase01_pessimistic_lock_db_result.png)
 
 <br />
 
-> **Warning**
-> - ???: 뭐야 왜 안들어가져!!
-> - ???: 아~ 서버 터졌네 눌렀는데 빙글빙글 돌기만 한다
-> - ???: 개발자 일 똑바로 안하냐 이 회사는 항상 이러네 ㅡㅡ
+> **Note**
+> - ???: 아 늦었네!
+> - ???: 사람들이 밥 먹고 이것만했나~ 구매 엄청 빠르네
 
-개발팀은 다시 머리가 새하얘졌다. <br />
-유입 인원을 정확히 예측할 수 없어 테스트를 할 수 없었기 때문이다. <br />
+개발팀은 오늘은 무사히 넘어갈 수 있었다.
