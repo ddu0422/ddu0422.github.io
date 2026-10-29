@@ -1,0 +1,98 @@
+---
+title: "시나브로 Phase 01 - 재고 동시성 제어 시도 (3)"
+description: "한정 수량 판매에서 원자적 업데이트를 적용합니다."
+category: "시스템 설계"
+tags: ["Sinabro", "동시성", "JPA", "MySQL"]
+status: "Draft"
+publishedAt: "2026-10-30T09:15:00+09:00"
+---
+
+## 시나리오
+
+[지난 3편 보기](/posts/sinabro-phase-01-pessimistic-lock/)
+
+예상치 못한 유입에 당황했던 개발팀은 지속적으로 늘어나는 
+
+## 시스템 상황
+
+2편과 동일하게 Single Application + Single DB로 되어있는 상황이다.
+
+![Single Application 시스템 아키텍처](/images/sinabro-wiki/phase01_single_application_architecture.png)
+
+과연 이 상황에서 개발자는 어떤 선택을 해야할까?
+
+### 판단 상황
+
+#### 현재 상황
+
+- DB는 현재 MySQL InnoDB 이므로 격리 수준이 REPEATABLE_READ 이다.
+- Thread Pool 은 별도 설정을 하지 않아 10이다. 
+- 1 Application 에서도 재고가 정확하지 않기 때문에 Scale Out을 할 수도 없다.
+
+<br />
+
+결론
+- 동시 요청으로 인해 동시성 제어가 필요한 상황이다. <br />
+- 느려도 정확한 재고만 차감이 되어야한다. <br />
+- (필수) 선착순은 아니더라도 시간 차를 적게하여 구매할 수 있게 해야한다.
+
+1. (불가) ~~Optimistic Lock~~
+2. Pessimistic Lock
+3. Conditional Atomic Update
+
+<br />
+
+### 시도 사항
+
+#### Scenario 2: Pessimistic Lock
+개발팀은 이 로직에 모든 걸 걸었다. <br />
+충돌이 일어남에도 반드시 성공을 해야한다. <br />
+
+```kotlin
+interface InventoryJpaRepository : JpaRepository<Inventory, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findByProductId(productId: Long): Inventory?
+}
+```
+
+(부하 테스트를 진행하여 실제 상황과 동일하게 테스트를 진행해보자)
+
+- Spring Boot
+- MySQL
+- k6
+
+<br />
+
+![k6 부하테스트](/images/sinabro-wiki/phase01_pessimistic_lock_performance_result.png) <br />
+![DB 결과](/images/sinabro-wiki/phase01_pessimistic_lock_db_result.png)
+
+개발팀은 테스트 결과를 보고 환호했다!! <br />
+모든 부하 요청을 견뎠으며 1,000건을 빠짐없이 구매에 성공했기 때문이다. <br />
+
+이제 배포 후 판매 대기만 기다리면 되는 상황이다. <br />
+
+개발팀: 배포 완료되었습니다!! 이제 딱 맞게 판매됩니다!! <br />
+마케팅팀: 저희 이번에 예상 유입이 10,000명입니다! 오픈 30초 전!
+
+> **Info**
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 이xx) <br />
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 오xx) <br />
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 박xx) <br />
+> 띠링~ (상품명: 먼작귀 우산 피규어 / 수량: 1개 / 주문자: 양xx) <br />
+
+<br />
+
+![k6 부하테스트](/images/sinabro-wiki/phase01_pessimistic_lock_performance_result_real.png) <br />
+![DB 결과](/images/sinabro-wiki/phase01_pessimistic_lock_db_result_real.png)
+
+<br />
+
+> **Note**
+> - ???: 아 늦었네!
+> - ???: 사람들이 밥 먹고 이것만했나~ 구매 엄청 빠르네
+
+개발팀은 예상치 못한 유입에 당황했다. <br />
+30초전에 예상 유입을 알려주는 팀이 어디있나 싶었다. <br />
+
+다행히 서버는 견뎌주였고 오늘은 무사히 넘어갈 수 있었다.
